@@ -1,0 +1,21 @@
+.main_pic {
+    width: 100%;
+    resize: both;
+    border-style: dashed;
+    align-self: center;
+}
+
+.goto_page {
+    font-size: xx-large;
+    border-style: dotted;
+}
+
+#now_at {
+    font-size: xx-large;
+    border-style: dotted;
+    text-align: center;
+}
+
+#pic {
+    width: 100%;
+}

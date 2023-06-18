@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+
+<head>
+    <title>main page</title>
+    <link rel="stylesheet" type="text/css" href="/css/a.css">
+</head>
+
+
+<body>
+    <ul id="manga_list" class="manga_list">
+
+        <!--  <li class="manga">
+            <div class="small_pic">
+                <a href="/a">
+                    <img src="pic/1.png" alt="1.png" class="pic">
+                    <center id="manga_name_1" class="manga_name">assssssssssssswwwwwwwwwwwwwssssssssssssssss</center>
+                </a>
+            </div>
+
+
+        </li>
+        -->
+
+    </ul>
+
+
+
+    <a id="next" href="" class="command">next</a>
+
+</body>
+
+<script>
+    function create_manga_element(name, picture, id, first) {
+        if (typeof (name) == "string" && typeof (picture) == "string") {
+        } else {
+            return null;
+        }
+
+        let img = document.createElement("img");
+        img.src = picture;
+        img.alt = picture;
+        img.className = "pic";
+
+        let text = document.createElement("center");
+        text.className = "manga_name";
+        text.innerHTML = name;
+
+        let link = document.createElement("a");
+        link.href = "/manga_page/" + String(id);
+        link.appendChild(img);
+        link.appendChild(text);
+
+        let div = document.createElement("div");
+        div.className = "small_pic";
+        div.appendChild(link);
+
+
+
+        let e = document.createElement("li");
+        e.className = "manga";
+        e.appendChild(div);
+        return e;
+    }
+
+
+    //let list = document.getElementById("manga_list");
+    //list.appendChild(create_manga_element("aaa", "pic/map.jpg", "/aaaaa"));
+
+
+    fetch('/info/all_manga')
+        .then(response => response.text())
+        .then(data => {
+            let list = document.getElementById("manga_list");
+
+            manga_list = JSON.parse(data);
+            manga_list.forEach(element => {
+                list.appendChild(create_manga_element(element.name, element.pic, element.id, element.first));
+            });
+            console.log(manga_list);
+        })
+        .catch(error => console.error(error));
+
+
+    console.log(document.URL);
+</script>

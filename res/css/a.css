@@ -1,0 +1,61 @@
+a {
+    text-decoration: none;
+}
+
+ul.manga_list {
+    display: grid;
+    border-style: double;
+    grid-template-columns: repeat(4, auto);
+    grid-template-rows: repeat(10, auto);
+
+    background-image: url("../pic/map.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+li.manga {
+    border-style: dotted;
+    display: grid;
+    width: 230px;
+    overflow: hidden;
+    resize: both;
+}
+
+.command {
+    color: rgb(199, 239, 53);
+    font-size: 40px;
+    text-decoration: none;
+}
+
+.command:visited {
+    color: rgb(12, 255, 255);
+
+}
+
+.manga_name {
+    font-size: 30px;
+    color: rgb(138, 28, 248);
+    line-height: 90%;
+    word-break: break-all;
+    text-align: center;
+}
+
+
+.small_pic:hover {
+    opacity: 0.4;
+    filter: alpha(opacity=40);
+    /*  IE8 及其更早版本 */
+}
+
+.small_pic {
+    opacity: 1.0;
+    filter: alpha(opacity=100);
+    width: 230px;
+    height: 300px;
+    overflow: hidden;
+    /* IE8 及其更早版本 */
+}
+
+.pic {
+    height: 80%;
+}

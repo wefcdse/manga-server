@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+
+<head>
+    <title>manga</title>
+    <link rel="stylesheet" type="text/css" href="/css/manga.css">
+</head>
+
+<body>
+    <a href="/">main page</a>
+    <p id="links"></p>
+    <img id="display_img">
+
+
+</body>
+<script>
+    let url = document.URL;
+    let u = url.split("/");
+    var manga = u[u.length - 1];
+
+
+
+    fetch("/manga/" + manga)
+        .then(response => response.text())
+        .then(data => {
+            console.log(data)
+            let info = JSON.parse(data);
+            length = info;
+            console.log(info);
+            let links = document.getElementById("links");
+
+            info.zips.forEach(element => {
+                console.log(element);
+                let t = document.createElement("a");
+                t.href = "/reader/" + manga + "/" + element;
+                t.innerHTML = String(element) + " ";
+                links.appendChild(t);
+            });
+
+            let i = document.getElementById("display_img");
+            i.src = info.pic;
+        })
+        .catch(error => console.error(error));
+
+
+    console.log();
+</script>

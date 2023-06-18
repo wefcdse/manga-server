@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+
+<head>
+    <title>main page</title>
+    <link rel="stylesheet" type="text/css" href="/css/reader.css">
+    <script>
+        var pic = 0;
+        var length = 1;
+    </script>
+</head>
+
+<body>
+    <a id="back_to_manga">back to manga</a>
+    <p id="links">
+
+    </p>
+    <p id="now_at">1</p>
+
+    <div class="main_pic" onclick="next()">
+        <img id="pic" src="/manga/67849/128837/7">
+    </div>
+</body>
+<script>
+    let url = document.URL;
+    let u = url.split("/");
+    var hua = u[u.length - 1];
+    var manga = u[u.length - 2];
+
+    {
+        let p = document.getElementById("pic");
+        p.src = "/manga/" + manga + "/" + hua + "/0";
+
+        let b = document.getElementById("back_to_manga");
+        b.href = "/manga_page/" + manga;
+    }
+
+    function next() {
+        let p = document.getElementById("pic");
+        pic += 1;
+        if (pic >= length) {
+            return;
+        }
+        change_now();
+        p.src = "/manga/" + manga + "/" + hua + "/" + pic;
+
+    }
+
+    function change_now() {
+        let n = document.getElementById("now_at");
+        n.innerHTML = String(pic + 1);
+    }
+
+    function gotopic(n) {
+        let p = document.getElementById("pic");
+        pic = n;
+        if (pic >= length) {
+            return;
+        }
+        change_now();
+        p.src = "/manga/" + manga + "/" + hua + "/" + pic;
+
+    }
+
+    fetch("/manga/" + manga + "/" + hua)
+        .then(response => response.text())
+        .then(data => {
+            let info = JSON.parse(data);
+            length = info.length;
+            console.log(length);
+            let links = document.getElementById("links");
+            for (let i = 0; i < length; i++) {
+                let t = document.createElement("b");
+                t.innerHTML = " " + String(i + 1) + " ";
+                t.className = "goto_page";
+                t.onclick = function () { gotopic(i) };
+                links.appendChild(t);
+            }
+
+        })
+        .catch(error => console.error(error));
+
+
+    console.log();
+</script>
