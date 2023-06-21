@@ -4,10 +4,9 @@ use std::fmt::Display;
 
 use tokio::fs;
 
-use crate::{
-    dmzj,
-    manga_list::{self, MangaInfo},
-};
+use crate::backend::BackendTrait;
+
+use crate::manga_list;
 
 #[derive(Debug, Clone)]
 struct StringError {
@@ -29,11 +28,13 @@ pub fn err<T>(s: &str) -> anyhow::Result<T> {
     Err(StringError::new(s).into())
 }
 
-pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
+pub async fn resolve<SelectedBackend: BackendTrait>(
+    req: Request<Body>,
+) -> anyhow::Result<Response<Body>> {
     let uri = req.uri();
     let path = uri.path().to_owned();
     //dbg!(&path);
-    let p: Vec<&str> = path.split("/").collect();
+    let p: Vec<&str> = path.split('/').collect();
     //dbg!(&p);
     let first_path = match p.get(1) {
         Some(v) => v.to_owned().to_owned(),
@@ -45,7 +46,7 @@ pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
             let f = fs::read("res/favicon.ico").await?;
             Response::new(Body::from(f))
         }
-        v if v == "" => {
+        v if v.is_empty() => {
             let f = fs::read("res/html/index.html").await?;
             Response::new(Body::from(f))
         }
@@ -78,7 +79,7 @@ pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
         v if v == "info" => {
             let info = p.get(2);
             if let Some(info) = info {
-                let i = get_info(*info, &uri).await?;
+                let i = get_info(info, uri).await?;
                 Response::new(Body::from(i))
             } else {
                 return err("img not found");
@@ -90,9 +91,9 @@ pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
                 Some(v) => v,
                 None => return err("manga id needed"),
             }
-            .parse::<u64>()?
             .to_string();
-            let hua = match p.get(3) {
+
+            let chapter = match p.get(3) {
                 Some(v) => v,
                 None => {
                     let out = {
@@ -106,27 +107,23 @@ pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
                     return Ok(Response::new(Body::from(out)));
                 }
             }
-            .parse::<u64>()?
             .to_string();
-            let base_path = (&*manga_list::get_list_ref().path).to_owned();
+
+            let base_path = (*manga_list::get_list_ref().path).to_owned();
 
             let pic_id = match p.get(4) {
                 Some(v) => v,
                 None => {
-                    #[derive(Debug, serde::Serialize)]
-                    struct Info {
-                        length: usize,
-                    };
-                    let l = dmzj::get_zip_length(&base_path, &manga_id, &hua).await?;
-                    let i = Info { length: l };
-                    let out = serde_json::to_string(&i)?;
+                    let info =
+                        SelectedBackend::get_chapter_info(&base_path, &manga_id, &chapter).await?;
+                    let out = serde_json::to_string(&info).unwrap();
                     return Ok(Response::new(Body::from(out)));
                 }
             }
             .parse::<usize>()?;
 
             Response::new(Body::from(
-                dmzj::get_pic_in_zip(&base_path, &manga_id, &hua, pic_id)
+                SelectedBackend::get_pic_in_chapter(&base_path, &manga_id, &chapter, pic_id)
                     .await?
                     .unwrap(),
             ))
@@ -143,11 +140,11 @@ pub async fn resolve(req: Request<Body>) -> anyhow::Result<Response<Body>> {
 }
 
 async fn get_res(t: &str, name: &str) -> Result<Vec<u8>, std::io::Error> {
-    let f = fs::read((&format!("res/{}/{}", t, name))).await?;
+    let f = fs::read(&format!("res/{}/{}", t, name)).await?;
     Ok(f)
 }
 
-async fn get_info(info: &str, uri: &Uri) -> Result<Vec<u8>, std::io::Error> {
+async fn get_info(info: &str, _uri: &Uri) -> Result<Vec<u8>, std::io::Error> {
     let out = match info {
         i if i == "all_manga" => manga_list::get_list_ref().all_json().into_bytes(),
         _ => {

@@ -1,21 +1,115 @@
 .main_pic {
+    display: flex;
+    justify-content: space-around;
     width: 100%;
     resize: both;
     border-style: dashed;
     align-self: center;
+    align-content: center;
+    position: relative;
 }
 
 .goto_page {
     font-size: xx-large;
-    border-style: dotted;
+    border-style: none;
+    cursor: pointer;
+
 }
 
-#now_at {
+.goto_page {
+    font-size: xx-large;
+    border-style: none;
+    cursor: pointer;
+
+}
+
+.now_at {
     font-size: xx-large;
     border-style: dotted;
     text-align: center;
 }
 
+#left {
+    /* background-color: aqua; */
+    width: 50%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+}
+
+#right {
+    /* background-color: rgb(255, 174, 0); */
+    width: 50%;
+    height: 100%;
+    top: 0;
+    left: 50%;
+    position: absolute;
+}
+
 #pic {
+    width: 90%;
+    align-self: center;
+    border-style: dotted;
+    resize: both;
+}
+
+.chapter {
+    font-size: x-large;
+    text-align: center;
+    /* background-color: aqua; */
+}
+
+.next {
+    font-size: x-large;
+    text-align: right;
+}
+
+.last {
+    font-size: x-large;
+    text-align: end;
+    align-self: flex-end;
+}
+
+.back_to_manga {
+    font-size: x-large;
+    text-align: left;
+    align-self: center;
+}
+
+.chapter_bar {
+    width: 100%;
+    display: flex;
+    /* background-color: aqua; */
+    justify-content: space-between;
+}
+
+.last_div {
+    align-self: center;
+    /* background-color: blue; */
+}
+
+.chapter_div {
+    width: fit-content;
+    /* background-color: bisque; */
+}
+
+.next_div {
+    width: fit-content;
+    /* background-color: coral; */
+}
+
+.links {
+    border-style: dotted;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+}
+
+#pic_size {
+    width: 100%;
+}
+
+#page_slider {
     width: 100%;
 }

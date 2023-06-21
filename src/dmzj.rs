@@ -1,33 +1,115 @@
-use std::{
-    collections::HashMap,
-    io::{BufRead, Write},
+use crate::{
+    backend::{BackendTrait, ChapterInfo},
+    manga_list::ChapterBasicInfo,
 };
+#[allow(unused_imports)]
+use std::io::Write as _;
 
-use async_zip::{tokio::read::ZipEntryReader, ZipFile, ZipFileBuilder};
+use std::{collections::HashMap, io::BufRead};
 
-pub async fn get_manga_pic() -> anyhow::Result<Vec<u8>> {
-    todo!()
+#[derive(Debug, Clone, Copy)]
+pub struct Dmzj;
+
+#[async_trait::async_trait]
+impl BackendTrait for Dmzj {
+    fn generate_manga_list() -> crate::manga_list::MangaList {
+        use crate::manga_list::MangaInfo;
+        use crate::manga_list::MangaList;
+
+        #[derive(Debug, Default, serde::Deserialize)]
+        struct Config {
+            path_zips: String,
+            path_mapping: String,
+        }
+        let f: String = std::fs::read_to_string("dmzj.toml").unwrap();
+        let config: Config = toml::from_str(&f).unwrap();
+
+        let l = MangaList::new(&config.path_zips);
+        let mapping = read_id_mapping(&config.path_mapping);
+        let all = read_all_zips(&config.path_zips);
+
+        for (k, v) in all {
+            if let Some(name) = mapping.get(&k) {
+                l.get_list_mut().insert(
+                    k.to_string(),
+                    MangaInfo {
+                        name: name.to_owned(),
+                        pic: format!("/manga/{}/{}/{}", k, v[0], 0),
+                        id: k.to_string(),
+                        chapters: v
+                            .iter()
+                            .map(|v| ChapterBasicInfo {
+                                id: v.to_string(),
+                                name: format!("id:{}", v),
+                                length: 0,
+                            })
+                            .collect(),
+                    },
+                );
+            } else {
+                l.get_list_mut().insert(
+                    k.to_string(),
+                    MangaInfo {
+                        name: k.to_string(),
+                        pic: format!("/manga/{}/{}/{}", k, v[0], 0),
+                        id: k.to_string(),
+                        chapters: v
+                            .iter()
+                            .map(|v| ChapterBasicInfo {
+                                id: v.to_string(),
+                                name: format!("id:{}", v),
+                                length: 0,
+                            })
+                            .collect(),
+                    },
+                );
+            }
+        }
+
+        l
+    }
+
+    async fn get_pic_in_chapter(
+        bass_path: &str,
+        manga_id: &str,
+        chapter: &str,
+        pic_id: usize,
+    ) -> anyhow::Result<Option<Vec<u8>>> {
+        get_pic_in_chapter(bass_path, manga_id, chapter, pic_id).await
+    }
+
+    async fn get_chapter_info(
+        bass_path: &str,
+        manga_id: &str,
+        chapter: &str,
+    ) -> anyhow::Result<ChapterInfo> {
+        let length = get_zip_length(bass_path, manga_id, chapter).await?;
+        Ok(ChapterInfo {
+            length,
+            name: format!("id:{}", chapter),
+        })
+    }
 }
 
-pub async fn get_pic_in_zip(
+async fn get_pic_in_chapter(
     bass_path: &str,
     manga_id: &str,
-    hua: &str,
+    chapter: &str,
     pic_id: usize,
 ) -> anyhow::Result<Option<Vec<u8>>> {
     use async_zip::tokio::read::seek::ZipFileReader;
-    use tokio::{fs::File, io::AsyncReadExt};
-    let mut file = File::open(&format!(r"{}/{}_{}.zip", bass_path, manga_id, hua)).await?;
+    use tokio::fs::File;
+    let mut file = File::open(&format!(r"{}/{}_{}.zip", bass_path, manga_id, chapter)).await?;
     let mut zip = ZipFileReader::with_tokio(&mut file).await?;
     let f = zip.file();
 
     let pic_file = format!("{}.jpg", pic_id);
 
-    let e = f
-        .entries()
-        .iter()
-        .filter(|e| e.entry().filename().as_str().unwrap() == pic_file)
-        .collect::<Vec<_>>();
+    // let _e = f
+    //     .entries()
+    //     .iter()
+    //     .filter(|e| e.entry().filename().as_str().unwrap() == pic_file)
+    //     .collect::<Vec<_>>();
 
     let e = {
         let mut a = None;
@@ -49,19 +131,19 @@ pub async fn get_pic_in_zip(
     Ok(Some(out))
 }
 
-pub async fn get_zip_length(bass_path: &str, manga_id: &str, hua: &str) -> anyhow::Result<usize> {
+async fn get_zip_length(bass_path: &str, manga_id: &str, hua: &str) -> anyhow::Result<usize> {
     use async_zip::tokio::read::seek::ZipFileReader;
     use tokio::fs::File;
-    let mut file = File::open((&format!(r"{}/{}_{}.zip", bass_path, manga_id, hua))).await?;
+    let mut file = File::open(&format!(r"{}/{}_{}.zip", bass_path, manga_id, hua)).await?;
     let zip = ZipFileReader::with_tokio(&mut file).await?;
     let f = zip.file();
 
     Ok(f.entries().len())
 }
 
-pub fn read_id_mapping(path: &str) -> HashMap<usize, String> {
+fn read_id_mapping(path: &str) -> HashMap<usize, String> {
     use std::fs;
-    let mut f = fs::OpenOptions::new().read(true).open(path).unwrap();
+    let f = fs::OpenOptions::new().read(true).open(path).unwrap();
 
     use std::io::BufReader;
     let mut f = BufReader::new(f);
@@ -87,7 +169,7 @@ pub fn read_id_mapping(path: &str) -> HashMap<usize, String> {
     id_mapping
 }
 
-pub fn read_all_zips(path: &str) -> HashMap<usize, Vec<usize>> {
+fn read_all_zips(path: &str) -> HashMap<usize, Vec<usize>> {
     let w = walkdir::WalkDir::new(path);
     let mut o: HashMap<usize, Vec<usize>> = HashMap::new();
     for e in w {
@@ -187,7 +269,7 @@ fn t() {
 fn t_unzip() {
     let a = async {
         use async_zip::tokio::read::seek::ZipFileReader;
-        use tokio::{fs::File, io::AsyncReadExt};
+        use tokio::fs::File;
         let mut file = File::open("./test.zip").await.unwrap();
 
         let mut zip = ZipFileReader::with_tokio(&mut file).await.unwrap();
@@ -203,7 +285,7 @@ fn t_unzip() {
         }
 
         let mut reader = zip.reader_with_entry(1).await.unwrap();
-        let l = reader.read_to_string_checked(&mut string).await.unwrap();
+        let _l = reader.read_to_string_checked(&mut string).await.unwrap();
 
         //println!("{}", string);
     };

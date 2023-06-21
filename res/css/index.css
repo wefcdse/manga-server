@@ -2,21 +2,26 @@ a {
     text-decoration: none;
 }
 
-ul.manga_list {
-    display: grid;
+.manga_list {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-evenly;
     border-style: double;
     grid-template-columns: repeat(4, auto);
     grid-template-rows: repeat(10, auto);
 
-    background-image: url("../pic/map.jpg");
+    background-image: url("/pic/map.jpg");
     background-repeat: no-repeat;
     background-size: cover;
 }
 
-li.manga {
+.manga {
+    /* flex-grow: 1; */
     border-style: dotted;
     display: grid;
     width: 230px;
+    height: 350px;
     overflow: hidden;
     resize: both;
 }
@@ -41,21 +46,38 @@ li.manga {
 }
 
 
-.small_pic:hover {
+/* .small_pic:hover {
     opacity: 0.4;
     filter: alpha(opacity=40);
-    /*  IE8 及其更早版本 */
+    
 }
+*/
 
-.small_pic {
+/* .small_pic {
     opacity: 1.0;
     filter: alpha(opacity=100);
     width: 230px;
-    height: 300px;
+    height: 350px;
     overflow: hidden;
-    /* IE8 及其更早版本 */
+    align-content: center;
+   
+} */
+
+.pic_div {
+    height: 300px;
+    align-self: center;
+    align-content: center;
+    overflow: hidden;
 }
 
 .pic {
-    height: 80%;
+    width: 100%;
+    align-self: center;
+    align-content: center;
+}
+
+
+.goto_page {
+    font-size: xx-large;
+    border-style: dotted;
 }

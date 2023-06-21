@@ -1,3 +1,20 @@
 #display_img {
     width: 100%;
 }
+
+.main_page {
+    font-size: xx-large;
+}
+
+.chapter {
+    font-size: xx-large;
+
+}
+
+a {
+    text-decoration: none;
+}
+
+a:visited {
+    color: rgb(102, 230, 255);
+}

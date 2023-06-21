@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <a href="/">main page</a>
+    <a href="/" class="main_page">main page</a>
     <p id="links"></p>
     <img id="display_img">
 
@@ -29,11 +29,12 @@
             console.log(info);
             let links = document.getElementById("links");
 
-            info.zips.forEach(element => {
+            info.chapters.forEach(element => {
                 console.log(element);
                 let t = document.createElement("a");
-                t.href = "/reader/" + manga + "/" + element;
-                t.innerHTML = String(element) + " ";
+                t.href = "/reader/" + manga + "/" + element.id;
+                t.className = "chapter"
+                t.innerHTML = "  [" + String(element.name) + "]  ";
                 links.appendChild(t);
             });
 

@@ -1,21 +1,28 @@
 use std::{
     collections::HashMap,
-    io::{BufRead, BufReader},
     sync::{Arc, Mutex},
 };
 
-use lazy_static::__Deref;
 use serde::Serialize;
 
-use crate::dmzj::{read_all_zips, read_id_mapping};
+use crate::{backend::BackendTrait, copy_manga, dmzj, eh};
+
+// use super::SelectedBackend;
 
 #[derive(Debug, Serialize, PartialEq, Clone, Eq)]
 pub struct MangaInfo {
     pub name: String,
     pub pic: String,
     pub id: String,
-    pub zips: Vec<usize>,
+    pub chapters: Vec<ChapterBasicInfo>,
 }
+#[derive(Debug, Serialize, PartialEq, Clone, Eq)]
+pub struct ChapterBasicInfo {
+    pub id: String,
+    pub name: String,
+    pub length: usize,
+}
+
 #[derive(Debug, Serialize, PartialEq, Clone, Eq)]
 pub struct MangaBasicInfo {
     pub name: String,
@@ -49,8 +56,8 @@ impl MangaList {
                         name: v.name.to_owned(),
                         pic: v.pic.to_owned(),
                         id: v.id.to_owned(),
-                        first: if let Some(e) = v.zips.get(0) {
-                            e.to_string()
+                        first: if let Some(e) = v.chapters.get(0) {
+                            e.id.clone()
                         } else {
                             String::new()
                         },
@@ -59,6 +66,7 @@ impl MangaList {
             )
         }
     }
+    #[allow(dead_code)]
     fn all_info(&self) -> Vec<MangaBasicInfo> {
         if self.all_basic_info.lock().unwrap().is_none() {
             self.collect_info();
@@ -74,9 +82,9 @@ impl MangaList {
         .unwrap()
     }
 
-    pub fn get_list_mut<'a>(
-        &'a self,
-    ) -> impl std::ops::DerefMut<Target = HashMap<String, MangaInfo>> + 'a {
+    pub fn get_list_mut(
+        &self,
+    ) -> impl std::ops::DerefMut<Target = HashMap<String, MangaInfo>> + '_ {
         self.list.lock().unwrap()
     }
 }
@@ -94,7 +102,7 @@ fn t_s() {
         c: Vec<usize>,
         d: Option<usize>,
         e: Option<usize>,
-    };
+    }
     println!(
         "{}",
         toml::to_string(&T {
@@ -114,60 +122,49 @@ fn t_s() {
 }
 
 fn single_mangalist() -> MangaList {
-    let f = std::fs::OpenOptions::new()
-        .read(true)
-        .open("path.txt")
-        .unwrap();
-    let mut bf = BufReader::new(f);
-    let mut p1 = String::new();
-    let mut p2 = String::new();
-    bf.read_line(&mut p1).unwrap();
-    bf.read_line(&mut p2).unwrap();
-
-    let p1 = p1
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect::<String>();
-    let p2 = p2
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect::<String>();
-
-    let l = MangaList::new(&p1);
-    let mapping = read_id_mapping(&p2);
-    let all = read_all_zips(&p1);
-
-    for (k, v) in all {
-        if let Some(name) = mapping.get(&k) {
-            l.get_list_mut().insert(
-                k.to_string(),
-                MangaInfo {
-                    name: name.to_owned(),
-                    pic: format!("/manga/{}/{}/{}", k, v[0], 0),
-                    id: k.to_string(),
-                    zips: v,
-                },
-            );
-        } else {
-            l.get_list_mut().insert(
-                k.to_string(),
-                MangaInfo {
-                    name: k.to_string(),
-                    pic: format!("/manga/{}/{}/{}", k, v[0], 0),
-                    id: k.to_string(),
-                    zips: v,
-                },
-            );
-        }
+    match CONFIG.backend {
+        Backend::DMZJ => dmzj::Dmzj::generate_manga_list(),
+        Backend::CopyManga => copy_manga::CopyManga::generate_manga_list(),
+        Backend::Eh => eh::Eh::generate_manga_list(),
     }
-
-    l
 }
 
 pub fn get_list_ref() -> &'static MangaList {
     &MANGA_LIST
 }
-
+lazy_static::lazy_static!(
+   pub static ref CONFIG: Config = config();
+);
+#[derive(Debug, Clone, Copy, serde::Deserialize, serde::Serialize)]
+pub enum Backend {
+    DMZJ,
+    CopyManga,
+    Eh,
+}
+#[derive(Debug, Clone, Copy, serde::Deserialize)]
+pub struct Config {
+    pub port: u16,
+    pub backend: Backend,
+}
+fn config() -> Config {
+    #[derive(Debug, Clone, serde::Deserialize)]
+    struct ConfigD {
+        port: u16,
+        backend: String,
+    }
+    let f = std::fs::read_to_string("config.toml").unwrap();
+    let config: ConfigD = toml::from_str(&f).unwrap();
+    let backend = match config.backend {
+        v if v == "dmzj" => Backend::DMZJ,
+        v if v == "copy_manga" => Backend::CopyManga,
+        v if v == "eh" => Backend::Eh,
+        _ => panic!(),
+    };
+    Config {
+        port: config.port,
+        backend,
+    }
+}
 #[test]
 fn t() {
     let p = r"H:\g\Books\manga\zips";

@@ -11,75 +11,203 @@
 </head>
 
 <body>
-    <a id="back_to_manga">back to manga</a>
-    <p id="links">
-
-    </p>
-    <p id="now_at">1</p>
-
-    <div class="main_pic" onclick="next()">
-        <img id="pic" src="/manga/67849/128837/7">
+    <a class="back_to_manga">back to manga</a>
+    <br>
+    <div class="chapter_bar">
+        <div class="last_div"><a class="last">last chapter</a></div>
+        <div class="chapter_div"><b class="chapter">chapter:</b></div>
+        <div class="next_div"><a class="next">next chapter</a></div>
     </div>
+
+    <div class="links"></div>
+
+
+    <input id="pic_size" value="90" type="range" step="0.01" min="50" max="100" oninput="change_pic_size()"
+        ondrag="change_pic_size()">
+
+    <div class="now_at">1</div>
+    <input id="page_slider" type="range" step="1">
+
+    <div class="main_pic">
+        <img id="pic" src="/manga/67849/128837/7">
+
+        <div id="left" onclick="last()"></div>
+        <div id="right" onclick="next()"></div>
+
+    </div>
+    <div class="now_at">1</div>
+    <div class="links">
+    </div>
+    <div class="chapter_bar">
+        <div class="last_div"><a class="last">last chapter</a></div>
+        <div class="chapter_div"><b class="chapter">chapter:</b></div>
+        <div class="next_div"><a class="next">next chapter</a></div>
+    </div>
+    <a class="back_to_manga">back to manga</a>
+
+
 </body>
 <script>
     let url = document.URL;
     let u = url.split("/");
-    var hua = u[u.length - 1];
+    var chapter = u[u.length - 1];
     var manga = u[u.length - 2];
 
     {
         let p = document.getElementById("pic");
-        p.src = "/manga/" + manga + "/" + hua + "/0";
+        p.src = "/manga/" + manga + "/" + chapter + "/0";
 
-        let b = document.getElementById("back_to_manga");
-        b.href = "/manga_page/" + manga;
+        let b = document.getElementsByClassName("back_to_manga");
+        for (let i = 0; i < b.length; i++) {
+            let bi = b[i];
+            bi.href = "/manga_page/" + manga;
+        }
+
+        let i = document.getElementById("pic_size");
+        i.value = 90;
+
+
+    }
+
+    function change_pic_size() {
+        let i = document.getElementById("pic_size");
+
+        let pic = document.getElementById("pic");
+        pic.style.width = String(i.value) + "%"
+    }
+
+
+    function last() {
+        let p = document.getElementById("pic");
+        // console.log(length);
+        if (pic < 1) {
+            return;
+        }
+        pic -= 1;
+        change_now();
+        p.src = "/manga/" + manga + "/" + chapter + "/" + pic;
     }
 
     function next() {
         let p = document.getElementById("pic");
-        pic += 1;
-        if (pic >= length) {
+
+        // console.log(length);
+        if (pic >= length - 1) {
+            p.src = "/pic/end.jpg"
             return;
         }
+        pic += 1;
         change_now();
-        p.src = "/manga/" + manga + "/" + hua + "/" + pic;
+        p.src = "/manga/" + manga + "/" + chapter + "/" + pic;
 
     }
 
     function change_now() {
-        let n = document.getElementById("now_at");
-        n.innerHTML = String(pic + 1);
+        let n = document.getElementsByClassName("now_at");
+        for (let i = 0; i < n.length; i++) {
+            let ni = n[i];
+            ni.innerHTML = String(pic + 1) + "/" + String(length);
+        }
+        let s = document.getElementById("page_slider");
+        s.value = pic;
     }
 
     function gotopic(n) {
         let p = document.getElementById("pic");
         pic = n;
+
         if (pic >= length) {
             return;
         }
         change_now();
-        p.src = "/manga/" + manga + "/" + hua + "/" + pic;
+        p.src = "/manga/" + manga + "/" + chapter + "/" + pic;
 
     }
 
-    fetch("/manga/" + manga + "/" + hua)
+    function my_for_each(obj, func) {
+        for (let i = 0; i < obj.length; i++) {
+            func(obj[i])
+        }
+    }
+
+    fetch("/manga/" + manga + "/" + chapter)
         .then(response => response.text())
         .then(data => {
             let info = JSON.parse(data);
             length = info.length;
-            console.log(length);
-            let links = document.getElementById("links");
-            for (let i = 0; i < length; i++) {
-                let t = document.createElement("b");
-                t.innerHTML = " " + String(i + 1) + " ";
-                t.className = "goto_page";
-                t.onclick = function () { gotopic(i) };
-                links.appendChild(t);
-            }
+            // console.log(info);
+            let links = document.getElementsByClassName("links");
+            console.log(links);
+            for (let i = 0; i < links.length; i++) {
+                let element = links[i];
+                for (let i = 0; i < length; i++) {
+                    let t = document.createElement("b");
+                    t.innerHTML = "[" + String(i + 1) + "]";
+                    t.className = "goto_page";
+                    t.onclick = function () { gotopic(i) };
+                    let d = document.createElement("div");
+
+                    element.appendChild(t);
+                }
+            };
+
+            let sli = document.getElementById("page_slider");
+            let s = document.createElement("input");
+
+            sli.min = 0;
+            sli.max = length - 1;
+            sli.oninput = function () {
+                let s = document.getElementById("page_slider");
+                gotopic(Number(s.value));
+            };
+
+            let c = document.getElementsByClassName("chapter");
+            my_for_each(c, e => {
+                e.innerHTML = "chapter:" + info.name;
+            })
+            change_now()
+
 
         })
         .catch(error => console.error(error));
 
+    fetch("/manga/" + manga)
+        .then(response => response.text())
+        .then(data => {
+            let info = JSON.parse(data);
+            // console.log(info);
+            let now_chapter = -1;
+            for (let i = 0; i < info.chapters.length; i++) {
+                // console.log(info.chapters[i]);
+                // console.log(chapter);
+                if (info.chapters[i].id == chapter) {
+                    now_chapter = i;
+                    break;
+                }
+            }
 
-    console.log();
+            let n = document.getElementsByClassName("next");
+            my_for_each(n, c => {
+                if (now_chapter >= 0 && now_chapter < info.chapters.length - 1) {
+                    c.href = "/reader/" + manga + "/" + info.chapters[now_chapter + 1].id;
+                } else {
+                    c.href = "/manga_page/" + manga;
+                    c.innerHTML = "back to manga page";
+                }
+            })
+
+            let l = document.getElementsByClassName("last");
+            my_for_each(l, c => {
+                if (now_chapter > 0 && now_chapter < info.chapters.length) {
+                    c.href = "/reader/" + manga + "/" + info.chapters[now_chapter - 1].id;
+                } else {
+                    c.href = "/manga_page/" + manga;
+                    c.innerHTML = "back to manga page";
+                }
+            })
+
+        })
+        .catch(error => console.error(error));
+
+    // console.log();
 </script>
