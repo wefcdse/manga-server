@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+
+<head>
+    <title>main page</title>
+    <link rel="stylesheet" type="text/css" href="/css/index.css">
+</head>
+
+
+<body>
+    <a class="command" href="/">main page</a>
+    <div id="manga_list" class="manga_list">
+
+        <!--  <li class="manga">
+            <div class="small_pic">
+                <a href="/a">
+                    <img src="pic/1.png" alt="1.png" class="pic">
+                    <center id="manga_name_1" class="manga_name">assssssssssssswwwwwwwwwwwwwssssssssssssssss</center>
+                </a>
+            </div>
+
+
+        </li>
+        -->
+
+        </ul>
+
+
+
+
+
+</body>
+
+<script>
+    const one_page = 16;
+    var all_mangas = null;
+    var now_page = 0;
+    function create_manga_element(name, picture, id, first) {
+        if (typeof (name) == "string" && typeof (picture) == "string") {
+        } else {
+            return null;
+        }
+
+        let img = document.createElement("img");
+        img.src = picture;
+        img.alt = picture;
+        img.className = "pic";
+
+        let img_div = document.createElement("div");
+        img_div.className = "pic_div";
+        img_div.appendChild(img);
+
+        let text = document.createElement("div");
+        text.className = "manga_name";
+        text.innerHTML = name;
+
+        let link = document.createElement("a");
+        link.href = "/manga_page/" + String(id);
+        link.appendChild(img_div);
+        link.appendChild(text);
+
+        let div = document.createElement("div");
+        div.className = "small_pic";
+        // div.appendChild(link);
+
+
+
+        let e = document.createElement("div");
+        e.className = "manga";
+        e.appendChild(link);
+        return e;
+    }
+
+
+    //let list = document.getElementById("manga_list");
+    //list.appendChild(create_manga_element("aaa", "pic/map.jpg", "/aaaaa"));
+    function change_now_at() {
+        let n = document.getElementById("now_at");
+        n.innerHTML = String(now_page + 1);
+        console.log(now_page);
+    }
+
+    function to_page(page) {
+        let list = document.getElementById("manga_list");
+        // console.log(list.childNodes)
+
+        let ele;
+        while ((ele = list.firstChild)) {
+            ele.remove();
+        }
+
+        let todisplay = Math.min(all_mangas.length - page * one_page, one_page);
+        // console.log(todisplay);
+        let base = page * one_page;
+        for (let i = 0; i < todisplay; i++) {
+            // console.log(all_mangas);
+            let element = all_mangas[i + base];
+            list.appendChild(create_manga_element(element.name, element.pic, element.id, element.first));
+        }
+        change_now_at()
+    }
+    function next() {
+        if (now_page < Math.floor(all_mangas.length / one_page)) {
+            now_page += 1;
+            // console.log(now_page);
+            to_page(now_page);
+        }
+    }
+    function last() {
+        if (now_page > 0) {
+            now_page -= 1;
+            // console.log(now_page);
+            to_page(now_page);
+        }
+    }
+
+    fetch('/info/all_manga')
+        .then(response => response.text())
+        .then(data => {
+            let list = document.getElementById("manga_list");
+
+            let manga_list = JSON.parse(data);
+            all_mangas = manga_list;
+
+            manga_list.forEach(element => {
+                list.appendChild(create_manga_element(element.name, element.pic, element.id, element.first));
+            });
+
+
+
+
+
+            console.log(manga_list);
+        })
+        .catch(error => console.error(error));
+
+
+    console.log(document.URL);
+</script>

@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::{backend::BackendTrait, copy_manga, dmzj, eh};
+use crate::{backend::BackendTrait, copy_manga, dmzj, eh, shaft};
 
 // use super::SelectedBackend;
 
@@ -126,6 +126,7 @@ fn single_mangalist() -> MangaList {
         Backend::DMZJ => dmzj::Dmzj::generate_manga_list(),
         Backend::CopyManga => copy_manga::CopyManga::generate_manga_list(),
         Backend::Eh => eh::Eh::generate_manga_list(),
+        Backend::Shaft => shaft::Shaft::generate_manga_list(),
     }
 }
 
@@ -140,6 +141,7 @@ pub enum Backend {
     DMZJ,
     CopyManga,
     Eh,
+    Shaft,
 }
 #[derive(Debug, Clone, Copy, serde::Deserialize)]
 pub struct Config {
@@ -158,6 +160,7 @@ fn config() -> Config {
         v if v == "dmzj" => Backend::DMZJ,
         v if v == "copy_manga" => Backend::CopyManga,
         v if v == "eh" => Backend::Eh,
+        v if v == "shaft" => Backend::Shaft,
         _ => panic!(),
     };
     Config {

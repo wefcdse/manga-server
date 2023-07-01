@@ -2,7 +2,7 @@
 
 
 <head>
-    <title>main page</title>
+    <title>reader</title>
     <link rel="stylesheet" type="text/css" href="/css/reader.css">
     <script>
         var pic = 0;
@@ -11,6 +11,10 @@
 </head>
 
 <body>
+    <a class="command" id="random_manga">random</a>
+    <br>
+    <a class="back_to_mainpage" href="/">back to mainpage</a>
+    <br>
     <a class="back_to_manga">back to manga</a>
     <br>
     <div class="chapter_bar">
@@ -22,11 +26,11 @@
     <div class="links"></div>
 
 
-    <input id="pic_size" value="90" type="range" step="0.01" min="50" max="100" oninput="change_pic_size()"
+    <input id="pic_size" value="90" type="range" step="0.01" min="20" max="100" oninput="change_pic_size()"
         ondrag="change_pic_size()">
 
     <div class="now_at">1</div>
-    <input id="page_slider" type="range" step="1">
+    <input class="page_slider" type="range" step="1">
 
     <div class="main_pic">
         <img id="pic" src="/manga/67849/128837/7">
@@ -36,6 +40,7 @@
 
     </div>
     <div class="now_at">1</div>
+    <input class="page_slider" type="range" step="1">
     <div class="links">
     </div>
     <div class="chapter_bar">
@@ -54,6 +59,35 @@
     var manga = u[u.length - 2];
 
     {
+        fetch('/info/all_manga')
+            .then(response => response.text())
+            .then(data => {
+                let list = document.getElementById("manga_list");
+                let manga_list = JSON.parse(data);
+                let r = document.getElementById("random_manga");
+                let randomed = Math.floor(Math.random() * manga_list.length);
+                let id = manga_list[randomed].id;
+                fetch("/manga/" + id)
+                    .then(response => response.text())
+                    .then(data => {
+
+                        // console.log(data);
+                        console.log("/manga/" + id);
+                        let info = JSON.parse(data);
+                        console.log(info);
+                        let randomed = Math.floor(Math.random() * info.chapters.length);
+                        let cpt = info.chapters[randomed].id;
+
+                        r.href = "/reader/" + id + "/" + cpt;
+
+                    })
+
+
+            }).catch(error => console.error(error));
+    }
+
+
+    {
         let p = document.getElementById("pic");
         p.src = "/manga/" + manga + "/" + chapter + "/0";
 
@@ -68,7 +102,6 @@
 
 
     }
-
     function change_pic_size() {
         let i = document.getElementById("pic_size");
 
@@ -108,8 +141,12 @@
             let ni = n[i];
             ni.innerHTML = String(pic + 1) + "/" + String(length);
         }
-        let s = document.getElementById("page_slider");
-        s.value = pic;
+        let s1 = document.getElementsByClassName("page_slider");
+        my_for_each(s1, s => {
+
+            s.value = pic;
+
+        })
     }
 
     function gotopic(n) {
@@ -151,15 +188,20 @@
                 }
             };
 
-            let sli = document.getElementById("page_slider");
-            let s = document.createElement("input");
+            let slis = document.getElementsByClassName("page_slider");
 
-            sli.min = 0;
-            sli.max = length - 1;
-            sli.oninput = function () {
-                let s = document.getElementById("page_slider");
-                gotopic(Number(s.value));
-            };
+            my_for_each(slis, sli => {
+                sli.min = 0;
+                sli.max = length - 1;
+                sli.oninput = function () {
+                    let s = document.getElementsByClassName("page_slider");
+                    for (let i = 0; i < s.length; i++) {
+                        if (s[i].value != pic) {
+                            gotopic(Number(s[i].value));
+                        }
+                    }
+                };
+            });
 
             let c = document.getElementsByClassName("chapter");
             my_for_each(c, e => {

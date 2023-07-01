@@ -32,3 +32,6 @@ features = ['full']
 [dependencies.tokio]
 version = '1.28.2'
 features = ['full']
+
+[profile.release]
+opt-level = 3

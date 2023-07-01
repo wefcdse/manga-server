@@ -221,14 +221,18 @@ fn generate_id_mapping() {
             let name = i.file_name().to_str().unwrap().to_owned();
             let id: u64 = name.split(" ").next().unwrap().parse().unwrap();
             let name = {
-                let mut n = name.split(" ");
-                n.next();
-                n.next()
+                let n = {
+                    let mut n = name.split(" ");
+                    n.next();
+                    n.next()
+                }
+                .unwrap();
+                if n.ends_with(".#") {
+                    &n[..n.len() - 2]
+                } else {
+                    n
+                }
             }
-            .unwrap()
-            .split(".")
-            .next()
-            .unwrap()
             .to_owned();
             if h.contains_key(&id) {
                 panic!()

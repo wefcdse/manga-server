@@ -9,9 +9,15 @@
 
 <body>
     <p id="pages"></p>
-    <p id="now_at">1</p>
-    <a id="next" class="command" onclick="next()">next</a>
+    <p id="now_at" class="chapter">1</p>
+    <a class="command" id="random_manga">random</a>
+    <br>
+
+    <a class="command" href="/html/index_all.html">all manga</a>
+    <br>
     <a id="last" class="command" onclick="last()">last</a>
+
+    <a id="next" class="command" onclick="next()">next</a>
     <div id="manga_list" class="manga_list">
 
         <!--  <li class="manga">
@@ -116,6 +122,33 @@
             to_page(now_page);
         }
     }
+
+    fetch('/info/all_manga')
+        .then(response => response.text())
+        .then(data => {
+            let list = document.getElementById("manga_list");
+            let manga_list = JSON.parse(data);
+            let r = document.getElementById("random_manga");
+            let randomed = Math.floor(Math.random() * manga_list.length);
+            let id = manga_list[randomed].id;
+            fetch("/manga/" + id)
+                .then(response => response.text())
+                .then(data => {
+
+                    // console.log(data);
+                    console.log("/manga/" + id);
+                    let info = JSON.parse(data);
+                    console.log(info);
+                    let randomed = Math.floor(Math.random() * info.chapters.length);
+                    let cpt = info.chapters[randomed].id;
+
+                    r.href = "/reader/" + id + "/" + cpt;
+
+                })
+
+
+        }).catch(error => console.error(error));
+
 
     fetch('/info/all_manga')
         .then(response => response.text())

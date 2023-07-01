@@ -45,6 +45,11 @@ a {
     text-align: center;
 }
 
+.chapter {
+    font-size: x-large;
+    text-align: center;
+    /* background-color: aqua; */
+}
 
 /* .small_pic:hover {
     opacity: 0.4;

@@ -66,7 +66,16 @@ pub async fn resolve<SelectedBackend: BackendTrait>(
                 let f = get_res("css", name).await?;
                 Response::new(Body::from(f))
             } else {
-                return err("img not found");
+                return err("css not found");
+            }
+        }
+        v if v == "html" => {
+            let name = p.get(2);
+            if let Some(name) = name {
+                let f = get_res("html", name).await?;
+                Response::new(Body::from(f))
+            } else {
+                return err("html not found");
             }
         }
 

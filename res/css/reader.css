@@ -77,6 +77,18 @@
     align-self: center;
 }
 
+.command {
+    font-size: x-large;
+    text-align: left;
+    align-self: center;
+}
+
+.back_to_mainpage {
+    font-size: x-large;
+    text-align: left;
+    align-self: center;
+}
+
 .chapter_bar {
     width: 100%;
     display: flex;
@@ -110,6 +122,6 @@
     width: 100%;
 }
 
-#page_slider {
+.page_slider {
     width: 100%;
 }

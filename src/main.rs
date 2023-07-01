@@ -7,6 +7,7 @@ use hyper::{
 use manga_server::{
     copy_manga, dmzj, eh,
     manga_list::{Backend, CONFIG},
+    shaft,
 };
 use tokio::fs;
 
@@ -24,6 +25,9 @@ async fn main() {
                         manga_server::request_resolver::resolve::<copy_manga::CopyManga>(req).await
                     }
                     Backend::Eh => manga_server::request_resolver::resolve::<eh::Eh>(req).await,
+                    Backend::Shaft => {
+                        manga_server::request_resolver::resolve::<shaft::Shaft>(req).await
+                    }
                 }
             } {
                 Ok(r) => r,

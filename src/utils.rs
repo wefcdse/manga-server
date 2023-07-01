@@ -55,6 +55,46 @@ fn t() {
     dbg!((10..=110).into_iter().collect::<S1>());
 }
 
+pub trait ShortUnwrap<T> {
+    fn u(self) -> T;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum SingleOrMany {
+    Single,
+    Many(usize),
+}
+impl SingleOrMany {
+    pub fn is_single(&self) -> bool {
+        match self {
+            Self::Single => true,
+            Self::Many(_) => false,
+        }
+    }
+    pub fn is_many(&self) -> bool {
+        !self.is_single()
+    }
+    pub fn add(&mut self, v: usize) {
+        if let Self::Many(i) = self {
+            *i += v;
+        } else {
+            *self = Self::Many(1 + v);
+        }
+    }
+}
+
+impl<T, E: Error> ShortUnwrap<T> for Result<T, E> {
+    fn u(self) -> T {
+        self.unwrap()
+    }
+}
+
+impl<T> ShortUnwrap<T> for Option<T> {
+    fn u(self) -> T {
+        self.unwrap()
+    }
+}
+
 #[test]
 fn t1() {
     let mut n = -1;
